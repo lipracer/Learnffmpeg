@@ -96,5 +96,67 @@ int main(int argc, char* *argv)
         return -1;
     }
 
+    if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) 
+    {
+        return -1;
+    }
+
+    pFrame = av_frame_alloc();
+    if (NULL == pFrame)
+    {
+        return -1;
+    }
+
+    pFrameRGB = av_frame_alloc();
+    if (NULL == pFrameRGB)
+    {
+        return -1;
+    }
+
+    numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, pCodecCtx->width,
+        pCodecCtx->height);
+
+    buffer = (uint8_t*)av_malloc(numBytes * sizeof(uint8_t));
+    avpicture_fill((AVPicture*)pFrameRGB, buffer, AV_PIX_FMT_RGB24,
+        pCodecCtx->width, pCodecCtx->height);
+
+    i = 0;
+    while (av_read_frame(pFormatCtx, &packet) >= 0)
+    {
+        if (videoStream == packet.stream_index) 
+        {
+            avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
+                &packet);
+            if (frameFinished)
+            {
+                struct SwsContext *img_convert_ctx = NULL;
+                img_convert_ctx = sws_getCachedContext(img_convert_ctx,
+                    pCodecCtx->width, pCodecCtx->height,
+                    pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height,
+                    AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
+                
+                if (!img_convert_ctx) 
+                {
+                    exit(1);
+                }
+
+                sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height,
+                    pFrameRGB->data, pFrameRGB->linesize);
+
+                if (i++ < 50) 
+                {
+                    SaveFrame(pFrameRGB, pCodecCtx->width, pCodecCtx->height, i);
+                }
+            }
+        }
+        av_free_packet(&packet);
+    }
+
+    av_free(buffer);
+    av_free(pFrameRGB);
+    av_free(pFrame);
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pFormatCtx);
+
     system("pause");
 }
