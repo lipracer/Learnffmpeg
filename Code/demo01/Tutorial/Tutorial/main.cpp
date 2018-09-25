@@ -51,6 +51,50 @@ int main(int argc, char* *argv)
         cout << "please provide a movie file\n";
         return -1;
     }
+    //register all formats and codes
+    av_register_all();
+    //support network stream input
+    avformat_network_init();
+    pFormatCtx = avformat_alloc_context();
+
+    if (0 != avformat_open_input(&pFormatCtx, argv[1], NULL, NULL))
+    {
+        printf("couldn't open file\n");
+        return -1;
+    }
+
+    //retrieve stream information
+    if (avformat_find_stream_info(pFormatCtx, NULL) < 0)
+    {
+        return -1;
+    }
+
+    av_dump_format(pFormatCtx, -1, argv[1], 0);
+
+    videoStream = -1;
+
+    for (int i = 0; i < pFormatCtx->nb_streams; ++i)
+    {
+        if (AVMEDIA_TYPE_VIDEO == pFormatCtx->streams[i]->codec->codec_type) 
+        {
+            videoStream = i;
+            break;
+        }
+    }
+
+    if (-1 == videoStream)
+    {
+        return - 1;
+    }
+
+    pCodecCtx = pFormatCtx->streams[videoStream]->codec;
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+
+    if (NULL == pCodec)
+    {
+
+        return -1;
+    }
 
     system("pause");
 }
