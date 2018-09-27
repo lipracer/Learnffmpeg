@@ -2,11 +2,73 @@
 #include <cstdio>
 #include <iostream>
 
+#define SRC_FILE "./wangzhe.mp4"
+
+extern "C" 
+{
 #include "libavcodec\avcodec.h"
 #include "libavformat\avformat.h"
 #include "libswscale\swscale.h"
-
+}
+//swscale-5.def;swresample-3.def;postproc-55.def;avcodec-58.def;avdevice-58.def;avfilter-7.def;avformat-58.def;avutil-56.def
 using namespace std;
+
+void WriteToBmp(char* filename, char *data, int width, int height, int ByteCount=3)
+{
+    int width_ = width;
+    if (ByteCount != 4)
+    {
+        while (width_ * 3 % 4) ++width_;
+    }
+
+    tagBITMAPFILEHEADER tagFileHead;
+    tagBITMAPINFOHEADER tagInfoHead;
+
+    memset(&tagFileHead, 0, sizeof(tagFileHead));
+    memset(&tagInfoHead, 0, sizeof(tagInfoHead));
+
+    tagFileHead.bfType = (('M' << 8) | 'B');
+    tagFileHead.bfSize = sizeof(tagFileHead) + sizeof(tagInfoHead) + width_ * height * ByteCount;
+    tagFileHead.bfOffBits = sizeof(tagFileHead) + sizeof(tagInfoHead);
+
+
+
+    tagInfoHead.biSize = sizeof(tagInfoHead);
+    tagInfoHead.biWidth = width_;
+    tagInfoHead.biHeight = height;
+    tagInfoHead.biPlanes = 1;
+    tagInfoHead.biBitCount = ByteCount << 3;
+    tagInfoHead.biCompression = 0;
+
+    tagInfoHead.biSizeImage = width_ * height * ByteCount;
+
+    FILE *pf = nullptr;
+    pf = fopen(filename, "wb");
+    if (pf) 
+    {
+        fwrite(&tagFileHead, sizeof(tagFileHead), 1, pf);
+        fwrite(&tagInfoHead, sizeof(tagInfoHead), 1, pf);
+
+        if (4 == ByteCount)
+        {
+            fwrite(data, width * height * 4, 1, pf);
+        }
+        else if(3 == ByteCount)
+        {
+            int nOLineSize = (width * 3);
+            int addSize = width_ * 3 - width * 3;
+            for (int i = height-1; i >= 0; --i)
+            {
+                fwrite(data + i * nOLineSize, nOLineSize, 1, pf);
+                fwrite(data, addSize, 1, pf);
+            }
+        }
+        
+        fclose(pf);
+    }
+
+
+}
 
 void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) 
 {
@@ -30,11 +92,20 @@ void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame)
         fwrite(pFrame->data[0] + y * pFrame->linesize[0], 1, width * 3, pFile);
     }
     fclose(pFile);
+
+    memset(szFilename, 0, sizeof(szFilename));
+    sprintf(szFilename, "fram%d.bmp", iFrame);
+    WriteToBmp(szFilename, (char*)pFrame->data[0], width, height);
 }
 
 
 int main(int argc, char* *argv) 
 {
+    //char* src = new char[250 * 250 * 3];
+    //memset(src, 0, 250*250*3);
+    //WriteToBmp("./test.bmp", src, 250, 250, 3);
+    //return 0;
+
     AVFormatContext *pFormatCtx;
     int i, videoStream;
     AVCodecContext *pCodecCtx;
@@ -46,18 +117,14 @@ int main(int argc, char* *argv)
     int numBytes;
     uint8_t *buffer;
 
-    if (argc < 2)
-    {
-        cout << "please provide a movie file\n";
-        return -1;
-    }
+
     //register all formats and codes
     av_register_all();
     //support network stream input
     avformat_network_init();
     pFormatCtx = avformat_alloc_context();
 
-    if (0 != avformat_open_input(&pFormatCtx, argv[1], NULL, NULL))
+    if (0 != avformat_open_input(&pFormatCtx, SRC_FILE, NULL, NULL))
     {
         printf("couldn't open file\n");
         return -1;
@@ -69,7 +136,7 @@ int main(int argc, char* *argv)
         return -1;
     }
 
-    av_dump_format(pFormatCtx, -1, argv[1], 0);
+    av_dump_format(pFormatCtx, -1, SRC_FILE, 0);
 
     videoStream = -1;
 

@@ -15,6 +15,32 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\avcodec.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\avdevice.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\avfilter.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\avformat.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\avutil.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\postproc.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\swresample.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+    <Library Include="..\..\..\..\..\ThreePart\Windows\lib\swscale.lib">
+      <Filter>Resource Files</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
