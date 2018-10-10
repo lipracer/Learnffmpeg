@@ -13,6 +13,7 @@ extern "C"
 
 #include "PlayerWindow.h"
 #include "DecodeAudio.h"
+#include "PlayerAudio.h"
 
 //swscale-5.def;swresample-3.def;postproc-55.def;avcodec-58.def;avdevice-58.def;avfilter-7.def;avformat-58.def;avutil-56.def
 using namespace std;
@@ -234,7 +235,8 @@ int decode_video()
 int main(int argc, char* *argv) 
 {
 	DecodeAudio da;
-	da.decode_audio();
+	//da.decode_audio();
 	decode_video();
+	//play_audio("./src.pcm");
     system("pause");
 }

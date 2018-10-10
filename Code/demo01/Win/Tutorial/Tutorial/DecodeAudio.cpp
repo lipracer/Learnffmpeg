@@ -6,18 +6,7 @@
 
 DecodeAudio::DecodeAudio()
 {
-	WAVEFORMATEX waveForm;
-	waveForm.nSamplesPerSec = 44100; /* sample rate */
-	waveForm.wBitsPerSample = 16; /* sample size */
-	waveForm.nChannels = 2; /* channels*/
-	waveForm.cbSize = 0; /* size of _extra_ info */
-	waveForm.wFormatTag = WAVE_FORMAT_PCM;
-	waveForm.nBlockAlign = (waveForm.wBitsPerSample * waveForm.nChannels) >> 3;
-	waveForm.nAvgBytesPerSec = waveForm.nBlockAlign * waveForm.nSamplesPerSec;
 
-	
-
-	waveOutOpen(&m_hWaveOut, WAVE_MAPPER, &waveForm, 0, 0, CALLBACK_NULL);
 
 }
 
@@ -29,28 +18,7 @@ DecodeAudio::~DecodeAudio()
 
 bool DecodeAudio::init_audio_device(char* block, int size)
 {
-
-
-	WAVEHDR header;
-	memset(&header, 0, sizeof(WAVEHDR));
-
-	header.dwBufferLength = size;
-	header.lpData = block;	
-	waveOutPrepareHeader(m_hWaveOut, &header, sizeof(WAVEHDR));
-	waveOutWrite(m_hWaveOut, &header, sizeof(WAVEHDR));
-
-	//Sleep(500);	
-
-	//while (waveOutUnprepareHeader(hWaveOut, &header, sizeof(WAVEHDR)) == WAVERR_STILLPLAYING)
-	//	Sleep(100);
-
-
-
-	return TRUE;
-
-
-
-
+	return true;
 }
 
 int DecodeAudio::decode_audio()
@@ -135,9 +103,12 @@ int DecodeAudio::decode_audio()
 
 		//  short decompressed_audio_buf[(AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2];
 		//  int decompressed_audio_buf_size;
-		uint32_t ret, len = 0;
+	uint32_t ret, len = 0;
 	int got_picture;
 	int index = 0;
+
+	FILE *pFile = fopen("./src.pcm", "wb");
+
 	while (av_read_frame(pFormatCtx, packet) >= 0)
 	{
 		if (packet->stream_index == audioStream)
@@ -167,10 +138,9 @@ int DecodeAudio::decode_audio()
 //注意：数据是 data【0】 ，长度是 linesize【0】
 #if 1
 
-				init_audio_device((char*)pFrame->data[0], pFrame->linesize[0]);
-				break;
 
-				//fwrite(pFrame->data[0], 1, pFrame->linesize[0], pFile);
+
+				fwrite(pFrame->data[0], 1, pFrame->linesize[0], pFile);
 
 
 
@@ -189,6 +159,7 @@ int DecodeAudio::decode_audio()
 	avcodec_close(pCodecCtx);
 
 	avformat_close_input(&pFormatCtx);
+	fclose(pFile);
 	return 0;
 
 }
